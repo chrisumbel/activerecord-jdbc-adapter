@@ -106,7 +106,7 @@ module ::ArJdbc
         when /time/i                                  then :time
         when /date/i                                  then :date
         when /text|ntext|xml/i                        then :text
-        when /binary|image|varbinary/i                then :binary
+        when /binary|image|varbinary/i                then :binary 
         when /char|nchar|nvarchar|string|varchar/i    then (@limit == 1073741823 ? (@limit = nil; :text) : :string)
         when /bit/i                                   then :boolean
         when /uniqueidentifier/i                      then :string
@@ -188,9 +188,8 @@ module ::ArJdbc
       # These methods will only allow the adapter to insert binary data with a length of 7K or less
       # because of a SQL Server statement length policy.
       def self.string_to_binary(value)
-        ''
+        "0x#{value.unpack('H*')[0]}"
       end
-
     end
 
     def quote(value, column = nil)
@@ -202,7 +201,7 @@ module ::ArJdbc
       when String, ActiveSupport::Multibyte::Chars, Integer
         value = value.to_s
         if column && column.type == :binary
-          "'#{quote_string(ArJdbc::MsSQL::Column.string_to_binary(value))}'" # ' (for ruby-mode)
+          "#{ArJdbc::MsSQL::Column.string_to_binary(value)}" # ' (for ruby-mode)
         elsif column && [:integer, :float].include?(column.type)
           value = column.type == :integer ? value.to_i : value.to_f
           value.to_s
